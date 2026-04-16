@@ -286,6 +286,12 @@ async function stopCamera() {
     dom.statusText.textContent = "Camera Inactive";
     dom.btnStartCamera.style.display = "inline-flex";
     dom.btnStopCamera.style.display = "none";
+    
+    const cvs = document.getElementById("overlayCanvas");
+    if (cvs) {
+        cvs.getContext("2d").clearRect(0, 0, cvs.width, cvs.height);
+    }
+    
     showToast("Camera stopped", "info");
 }
 
@@ -320,9 +326,14 @@ setInterval(() => {
 let lastPrediction = "";
 
 function updatePredictionUI(data) {
-    const { prediction, confidence, category, sentence, partial_word, model_ready, mode, suggestions, tts_server } = data;
+    const { prediction, confidence, category, sentence, partial_word, model_ready, mode, suggestions, tts_server, landmarks } = data;
 
     if (tts_server !== undefined) state.ttsServerAvailable = tts_server;
+
+    // Draw landmarks if present
+    if (landmarks !== undefined) {
+        drawLandmarks(landmarks);
+    }
 
     // Model status
     state.modelReady = model_ready;
@@ -418,6 +429,53 @@ function updateSuggestions(suggestions) {
     dom.suggestionChips.innerHTML = chips.length > 0
         ? chips.join("")
         : '<span class="suggestion-placeholder">Show a sign to see suggestions...</span>';
+}
+
+const HAND_CONNECTIONS = [
+    [0, 1], [1, 2], [2, 3], [3, 4],
+    [0, 5], [5, 6], [6, 7], [7, 8],
+    [5, 9], [9, 10], [10, 11], [11, 12],
+    [9, 13], [13, 14], [14, 15], [15, 16],
+    [13, 17], [0, 17], [17, 18], [18, 19], [19, 20]
+];
+
+function drawLandmarks(landmarks) {
+    const cvs = document.getElementById("overlayCanvas");
+    if (!cvs) return;
+    const ctx = cvs.getContext("2d");
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    if (!landmarks) return;
+
+    for (let h = 0; h < 2; h++) {
+        let offset = h * 63;
+        let isZero = true;
+        for (let i = 0; i < 63; i++) {
+            if (landmarks[offset + i] !== 0) { isZero = false; break; }
+        }
+        if (isZero) continue;
+
+        ctx.strokeStyle = "#00FFC8";
+        ctx.lineWidth = 2;
+        HAND_CONNECTIONS.forEach(([i, j]) => {
+            const x1 = landmarks[offset + i*3] * cvs.width;
+            const y1 = landmarks[offset + i*3 + 1] * cvs.height;
+            const x2 = landmarks[offset + j*3] * cvs.width;
+            const y2 = landmarks[offset + j*3 + 1] * cvs.height;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        });
+
+        ctx.fillStyle = "#FF3366";
+        for (let i = 0; i < 21; i++) {
+            const x = landmarks[offset + i*3] * cvs.width;
+            const y = landmarks[offset + i*3 + 1] * cvs.height;
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, 2*Math.PI);
+            ctx.fill();
+        }
+    }
 }
 
 async function insertCompletion(word) {

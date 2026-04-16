@@ -154,6 +154,7 @@ def api_process_frame():
             "model_ready": predictor.is_ready if predictor else False,
             "mode": detection_mode,
             "hand_detected": landmarks is not None,
+            "landmarks": landmarks.tolist() if landmarks is not None else None,
             "suggestions": {},
         }
 
