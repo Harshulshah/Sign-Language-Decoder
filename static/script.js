@@ -1,7 +1,11 @@
 /**
- * Sign Language Decoder — Frontend JavaScript
- * Handles camera, predictions, word suggestions, library browser,
- * custom signs, mode switching, and all UI interactions.
+ * Sign Language Decoder — Frontend JavaScript (Cloud-Ready)
+ * 
+ * Two camera modes:
+ * - CLIENT mode (cloud): Uses getUserMedia + canvas → base64 → POST /api/process_frame
+ * - LOCAL mode (dev): Uses MJPEG stream from /api/video_feed + polling /api/predict
+ * 
+ * TTS: Uses Web Speech API (works everywhere) with server-side pyttsx3 fallback.
  */
 
 // ─── State ──────────────────────────────────────────────────
@@ -9,17 +13,25 @@ const state = {
     cameraActive: false,
     modelReady: false,
     pollingInterval: null,
+    frameInterval: null,
     recentSigns: [],
     startTime: null,
     currentMode: 'auto',
     libraryData: null,
     activeCategory: 'all',
+    cameraMode: 'client', // 'client' or 'local'
+    stream: null,         // MediaStream from getUserMedia
+    ttsServerAvailable: false,
+    lastSpokenText: '',
+    lastSpeakTime: 0,
 };
 
 // ─── DOM Elements ───────────────────────────────────────────
 const dom = {
     videoFeed: document.getElementById("videoFeed"),
+    videoFeedMjpeg: document.getElementById("videoFeedMjpeg"),
     videoPlaceholder: document.getElementById("videoPlaceholder"),
+    captureCanvas: document.getElementById("captureCanvas"),
     liveBadge: document.getElementById("liveBadge"),
     predictionOverlay: document.getElementById("predictionOverlay"),
     predictionLabel: document.getElementById("predictionLabel"),
@@ -52,7 +64,6 @@ const dom = {
     toastContainer: document.getElementById("toastContainer"),
     suggestionChips: document.getElementById("suggestionChips"),
     modeButtons: document.getElementById("modeButtons"),
-    // Modals
     libraryModal: document.getElementById("libraryModal"),
     libraryClose: document.getElementById("libraryClose"),
     librarySearch: document.getElementById("librarySearch"),
@@ -69,10 +80,7 @@ const dom = {
 // ─── API Helpers ────────────────────────────────────────────
 async function apiCall(endpoint, method = "GET", body = null) {
     try {
-        const options = {
-            method,
-            headers: { "Content-Type": "application/json" },
-        };
+        const options = { method, headers: { "Content-Type": "application/json" } };
         if (body) options.body = JSON.stringify(body);
         const response = await fetch(`/api${endpoint}`, options);
         return await response.json();
@@ -94,34 +102,166 @@ function showToast(message, type = "info", duration = 3000) {
     }, duration);
 }
 
-// ─── Camera Controls ────────────────────────────────────────
+// ─── Web Speech API TTS ─────────────────────────────────────
+function speakText(text) {
+    if (!text || !text.trim()) return;
+    
+    const now = Date.now();
+    // Prevent duplicate/rapid speech
+    if (text === state.lastSpokenText && now - state.lastSpeakTime < 2000) return;
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    utterance.lang = 'en-US';
+    window.speechSynthesis.speak(utterance);
+    
+    state.lastSpokenText = text;
+    state.lastSpeakTime = now;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//   CAMERA: Client-side capture via getUserMedia
+// ═══════════════════════════════════════════════════════════════
+
+async function startClientCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 640, height: 480, facingMode: "user" }
+        });
+        state.stream = stream;
+        dom.videoFeed.srcObject = stream;
+        dom.videoFeed.style.display = "block";
+        dom.videoFeedMjpeg.style.display = "none";
+        dom.videoPlaceholder.classList.add("hidden");
+
+        // Wait for video to be ready
+        await new Promise(resolve => {
+            dom.videoFeed.onloadedmetadata = resolve;
+        });
+
+        // Setup canvas for frame capture
+        dom.captureCanvas.width = 640;
+        dom.captureCanvas.height = 480;
+
+        // Start sending frames to server
+        startFrameCapture();
+        return true;
+    } catch (err) {
+        console.error("getUserMedia failed:", err);
+        showToast("Camera access denied. Please allow camera.", "error");
+        return false;
+    }
+}
+
+function stopClientCamera() {
+    if (state.stream) {
+        state.stream.getTracks().forEach(track => track.stop());
+        state.stream = null;
+    }
+    dom.videoFeed.srcObject = null;
+    stopFrameCapture();
+}
+
+function startFrameCapture() {
+    if (state.frameInterval) clearInterval(state.frameInterval);
+    // Send frame every 150ms (~7 FPS to server, video still renders at full rate)
+    state.frameInterval = setInterval(captureAndSendFrame, 150);
+}
+
+function stopFrameCapture() {
+    if (state.frameInterval) {
+        clearInterval(state.frameInterval);
+        state.frameInterval = null;
+    }
+}
+
+let frameInFlight = false; // Prevent overlapping requests
+
+async function captureAndSendFrame() {
+    if (!state.cameraActive || frameInFlight) return;
+    
+    const video = dom.videoFeed;
+    if (!video.videoWidth) return;
+
+    const ctx = dom.captureCanvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, 640, 480);
+
+    // Convert to base64 JPEG
+    const frameData = dom.captureCanvas.toDataURL("image/jpeg", 0.7);
+    
+    frameInFlight = true;
+    try {
+        const data = await apiCall("/process_frame", "POST", { frame: frameData });
+        if (data && !data.error) {
+            updatePredictionUI(data);
+        }
+    } catch (e) {
+        // Silently fail on network hiccups
+    }
+    frameInFlight = false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//   CAMERA: Local mode (MJPEG stream fallback)
+// ═══════════════════════════════════════════════════════════════
+
+async function startLocalCamera() {
+    const result = await apiCall("/start_camera", "POST");
+    if (result && result.status === "ok") {
+        dom.videoFeedMjpeg.src = "/api/video_feed?" + Date.now();
+        dom.videoFeedMjpeg.style.display = "block";
+        dom.videoFeed.style.display = "none";
+        dom.videoPlaceholder.classList.add("hidden");
+        startPolling();
+        return true;
+    }
+    return false;
+}
+
+function stopLocalCamera() {
+    apiCall("/stop_camera", "POST");
+    dom.videoFeedMjpeg.src = "";
+    dom.videoFeedMjpeg.style.display = "none";
+    stopPolling();
+}
+
+// ─── Unified Camera Start/Stop ──────────────────────────────
+
 async function startCamera() {
     dom.btnStartCamera.disabled = true;
     dom.btnStartCamera.innerHTML = '<span class="spinner"></span> Starting...';
 
-    const result = await apiCall("/start_camera", "POST");
+    let success = false;
 
-    if (result && result.status === "ok") {
+    // Try client-side camera first (works on cloud deployment)
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        state.cameraMode = 'client';
+        success = await startClientCamera();
+    }
+    
+    // Fallback to local MJPEG if getUserMedia fails
+    if (!success) {
+        state.cameraMode = 'local';
+        success = await startLocalCamera();
+    }
+
+    if (success) {
         state.cameraActive = true;
         state.startTime = Date.now();
-
-        dom.videoFeed.src = "/api/video_feed?" + Date.now();
-        dom.videoFeed.style.display = "block";
-        dom.videoPlaceholder.classList.add("hidden");
         dom.liveBadge.classList.add("visible");
         dom.predictionOverlay.classList.add("visible");
-
         dom.statusBadge.classList.add("active");
-        dom.statusText.textContent = "Camera Active";
-
-        startPolling();
-
+        dom.statusText.textContent = state.cameraMode === 'client' ? "Camera Active (Browser)" : "Camera Active (Local)";
         dom.btnStartCamera.style.display = "none";
         dom.btnStopCamera.style.display = "inline-flex";
-
-        showToast("Camera started — show your signs!", "success");
+        showToast(`Camera started (${state.cameraMode} mode) — show your signs!`, "success");
     } else {
-        showToast("Failed to start camera. Check webcam.", "error");
+        showToast("Failed to start camera. Check permissions.", "error");
     }
 
     dom.btnStartCamera.disabled = false;
@@ -129,28 +269,27 @@ async function startCamera() {
 }
 
 async function stopCamera() {
-    const result = await apiCall("/stop_camera", "POST");
-    if (result && result.status === "ok") {
-        state.cameraActive = false;
-        dom.videoFeed.style.display = "none";
-        dom.videoFeed.src = "";
-        dom.videoPlaceholder.classList.remove("hidden");
-        dom.liveBadge.classList.remove("visible");
-        dom.predictionOverlay.classList.remove("visible");
+    state.cameraActive = false;
 
-        dom.statusBadge.classList.remove("active");
-        dom.statusText.textContent = "Camera Inactive";
-
-        stopPolling();
-
-        dom.btnStartCamera.style.display = "inline-flex";
-        dom.btnStopCamera.style.display = "none";
-
-        showToast("Camera stopped", "info");
+    if (state.cameraMode === 'client') {
+        stopClientCamera();
+    } else {
+        stopLocalCamera();
     }
+
+    dom.videoFeed.style.display = "none";
+    dom.videoFeedMjpeg.style.display = "none";
+    dom.videoPlaceholder.classList.remove("hidden");
+    dom.liveBadge.classList.remove("visible");
+    dom.predictionOverlay.classList.remove("visible");
+    dom.statusBadge.classList.remove("active");
+    dom.statusText.textContent = "Camera Inactive";
+    dom.btnStartCamera.style.display = "inline-flex";
+    dom.btnStopCamera.style.display = "none";
+    showToast("Camera stopped", "info");
 }
 
-// ─── Prediction Polling ─────────────────────────────────────
+// ─── Local Mode Polling ─────────────────────────────────────
 function startPolling() {
     if (state.pollingInterval) clearInterval(state.pollingInterval);
     state.pollingInterval = setInterval(async () => {
@@ -167,10 +306,23 @@ function stopPolling() {
     }
 }
 
+// ─── Session Timer ──────────────────────────────────────────
+setInterval(() => {
+    if (state.startTime && state.cameraActive) {
+        const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+        const mins = Math.floor(elapsed / 60);
+        const secs = elapsed % 60;
+        dom.statTime.textContent = `${mins}:${secs.toString().padStart(2, "0")}`;
+    }
+}, 1000);
+
+// ─── Update UI ──────────────────────────────────────────────
 let lastPrediction = "";
 
 function updatePredictionUI(data) {
-    const { prediction, confidence, category, sentence, partial_word, model_ready, mode, suggestions } = data;
+    const { prediction, confidence, category, sentence, partial_word, model_ready, mode, suggestions, tts_server } = data;
+
+    if (tts_server !== undefined) state.ttsServerAvailable = tts_server;
 
     // Model status
     state.modelReady = model_ready;
@@ -186,19 +338,13 @@ function updatePredictionUI(data) {
         dom.predictionConf.textContent = `Confidence: ${(confidence * 100).toFixed(1)}%`;
         dom.predictionCategory.textContent = category ? `[${category}]` : '';
         dom.confidenceBarFill.style.width = `${confidence * 100}%`;
-
         dom.statPrediction.textContent = prediction;
         dom.statConfidence.textContent = `${(confidence * 100).toFixed(0)}%`;
 
-        if (confidence >= 0.8) {
-            dom.statConfidence.className = "stat-value success";
-        } else if (confidence >= 0.5) {
-            dom.statConfidence.className = "stat-value warning";
-        } else {
-            dom.statConfidence.className = "stat-value";
-        }
+        if (confidence >= 0.8) dom.statConfidence.className = "stat-value success";
+        else if (confidence >= 0.5) dom.statConfidence.className = "stat-value warning";
+        else dom.statConfidence.className = "stat-value";
 
-        // Pop animation on new detection
         if (prediction !== lastPrediction) {
             dom.predictionLabel.classList.remove("detect-pop");
             void dom.predictionLabel.offsetWidth;
@@ -206,7 +352,6 @@ function updatePredictionUI(data) {
             lastPrediction = prediction;
         }
 
-        // Track recent signs
         if (state.recentSigns.length === 0 || state.recentSigns[0].label !== prediction) {
             state.recentSigns.unshift({ label: prediction, category: category || '' });
             if (state.recentSigns.length > 12) state.recentSigns.pop();
@@ -220,31 +365,17 @@ function updatePredictionUI(data) {
         dom.statPrediction.textContent = "—";
     }
 
-    // Sentence display
     updateSentenceDisplay(sentence);
 
-    // Partial word indicator
     if (partial_word) {
         dom.partialWord.textContent = `Spelling: ${partial_word}_`;
     } else {
         dom.partialWord.textContent = "";
     }
 
-    // Sign count
     dom.statSigns.textContent = sentence ? sentence.replace(/\s/g, "").length : "0";
 
-    // Session time
-    if (state.startTime) {
-        const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
-        const mins = Math.floor(elapsed / 60);
-        const secs = elapsed % 60;
-        dom.statTime.textContent = `${mins}:${secs.toString().padStart(2, "0")}`;
-    }
-
-    // Update suggestions
-    if (suggestions) {
-        updateSuggestions(suggestions);
-    }
+    if (suggestions) updateSuggestions(suggestions);
 }
 
 function updateSentenceDisplay(sentence) {
@@ -261,8 +392,7 @@ function updateRecentSigns() {
     dom.recentSignsContainer.innerHTML = state.recentSigns
         .map(s => {
             const isWord = s.label.length > 1 && !['SPACE','DELETE'].includes(s.label);
-            const cls = isWord ? 'sign-chip word' : 'sign-chip';
-            return `<span class="${cls}">${escapeHtml(s.label)}</span>`;
+            return `<span class="sign-chip ${isWord ? 'word' : ''}">${escapeHtml(s.label)}</span>`;
         })
         .join("");
 }
@@ -270,33 +400,24 @@ function updateRecentSigns() {
 // ─── Suggestions ────────────────────────────────────────────
 function updateSuggestions(suggestions) {
     const chips = [];
-
-    // Word completions
-    if (suggestions.completions && suggestions.completions.length > 0) {
+    if (suggestions.completions) {
         suggestions.completions.slice(0, 4).forEach(word => {
             chips.push(`<span class="suggestion-chip" onclick="insertCompletion('${escapeAttr(word)}')">${escapeHtml(word)}</span>`);
         });
     }
-
-    // Spell corrections
-    if (suggestions.corrections && suggestions.corrections.length > 0) {
+    if (suggestions.corrections) {
         suggestions.corrections.slice(0, 2).forEach(word => {
             chips.push(`<span class="suggestion-chip correction" onclick="insertCompletion('${escapeAttr(word)}')" title="Did you mean?">✏️ ${escapeHtml(word)}</span>`);
         });
     }
-
-    // Next-word suggestions
-    if (suggestions.next_words && suggestions.next_words.length > 0) {
+    if (suggestions.next_words) {
         suggestions.next_words.slice(0, 3).forEach(word => {
             chips.push(`<span class="suggestion-chip phrase" onclick="insertWord('${escapeAttr(word)}')" title="Next word">→ ${escapeHtml(word)}</span>`);
         });
     }
-
-    if (chips.length > 0) {
-        dom.suggestionChips.innerHTML = chips.join("");
-    } else {
-        dom.suggestionChips.innerHTML = '<span class="suggestion-placeholder">Show a sign to see suggestions...</span>';
-    }
+    dom.suggestionChips.innerHTML = chips.length > 0
+        ? chips.join("")
+        : '<span class="suggestion-placeholder">Show a sign to see suggestions...</span>';
 }
 
 async function insertCompletion(word) {
@@ -323,26 +444,24 @@ async function resetSentence() {
 }
 
 async function speakSentence() {
-    dom.btnSpeak.disabled = true;
-    dom.btnSpeak.innerHTML = '<span class="spinner"></span> Speaking...';
-
+    // Try server-side first, fall back to Web Speech API
     const result = await apiCall("/speak", "POST");
     if (result && result.status === "ok") {
-        showToast("Speaking output...", "success");
+        if (!result.tts_server) {
+            // Server can't speak — use browser TTS
+            speakText(result.message);
+        }
+        showToast("Speaking...", "success");
     } else {
-        showToast(result?.message || "Nothing to speak", "error");
+        // Fallback: speak whatever is in the sentence display
+        const sentence = dom.sentenceDisplay.textContent.replace('​', '').trim();
+        if (sentence) speakText(sentence);
     }
-
-    setTimeout(() => {
-        dom.btnSpeak.disabled = false;
-        dom.btnSpeak.innerHTML = '<span class="icon">🔊</span> Speak';
-    }, 1500);
 }
 
 async function addSpace() { await apiCall("/add_char", "POST", { char: " " }); }
 async function doBackspace() { await apiCall("/backspace", "POST"); }
 
-// ─── Mode Switching ─────────────────────────────────────────
 async function setMode(mode) {
     const result = await apiCall("/mode", "POST", { mode });
     if (result) {
@@ -354,7 +473,6 @@ async function setMode(mode) {
     }
 }
 
-// ─── Auto-Speak Toggle ─────────────────────────────────────
 async function toggleAutoSpeak() {
     const result = await apiCall("/auto_speak", "POST");
     if (result) {
@@ -366,7 +484,6 @@ async function toggleAutoSpeak() {
 // ─── Library Browser ────────────────────────────────────────
 async function openLibrary() {
     dom.libraryModal.classList.add("visible");
-
     if (!state.libraryData) {
         const data = await apiCall("/library");
         if (data) {
@@ -377,9 +494,7 @@ async function openLibrary() {
     }
 }
 
-function closeLibrary() {
-    dom.libraryModal.classList.remove("visible");
-}
+function closeLibrary() { dom.libraryModal.classList.remove("visible"); }
 
 function buildLibraryTabs(categories) {
     let html = '<button class="tab active" data-cat="all">All</button>';
@@ -387,7 +502,6 @@ function buildLibraryTabs(categories) {
         html += `<button class="tab" data-cat="${cat.key}">${cat.icon} ${cat.label} (${cat.count})</button>`;
     });
     dom.libraryTabs.innerHTML = html;
-
     dom.libraryTabs.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
             dom.libraryTabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -403,7 +517,6 @@ function renderLibraryGrid(signs) {
         dom.libraryGrid.innerHTML = '<div class="loading-text">No signs found</div>';
         return;
     }
-
     dom.libraryGrid.innerHTML = signs.map(sign => `
         <div class="library-card">
             <div class="sign-name">${escapeHtml(sign.label)}</div>
@@ -418,48 +531,28 @@ function filterLibrary() {
     if (!state.libraryData) return;
     const query = dom.librarySearch.value.toLowerCase().trim();
     const cat = state.activeCategory;
-
     let signs = state.libraryData.signs;
-
-    if (cat !== 'all') {
-        signs = signs.filter(s => s.category === cat);
-    }
-    if (query) {
-        signs = signs.filter(s =>
-            s.label.toLowerCase().includes(query) ||
-            s.description.toLowerCase().includes(query)
-        );
-    }
-
+    if (cat !== 'all') signs = signs.filter(s => s.category === cat);
+    if (query) signs = signs.filter(s => s.label.toLowerCase().includes(query) || s.description.toLowerCase().includes(query));
     renderLibraryGrid(signs);
 }
 
 // ─── Add Sign ───────────────────────────────────────────────
-function openAddSign() {
-    dom.addSignModal.classList.add("visible");
-}
-
-function closeAddSign() {
-    dom.addSignModal.classList.remove("visible");
-}
+function openAddSign() { dom.addSignModal.classList.add("visible"); }
+function closeAddSign() { dom.addSignModal.classList.remove("visible"); }
 
 async function saveNewSign() {
     const label = dom.newSignLabel.value.trim();
     const description = dom.newSignDescription.value.trim();
     const category = dom.newSignCategory.value;
-
-    if (!label) {
-        showToast("Please enter a sign label", "warning");
-        return;
-    }
-
+    if (!label) { showToast("Please enter a sign label", "warning"); return; }
     const result = await apiCall("/add_sign", "POST", { label, description, category });
     if (result && result.status === "ok") {
         showToast(`Sign "${label}" saved!`, "success");
         closeAddSign();
         dom.newSignLabel.value = "";
         dom.newSignDescription.value = "";
-        state.libraryData = null; // Force refresh
+        state.libraryData = null;
     } else {
         showToast(result?.message || "Failed to save sign", "error");
     }
@@ -471,40 +564,19 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
-
-function escapeAttr(text) {
-    return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
-}
+function escapeAttr(text) { return text.replace(/'/g, "\\'").replace(/"/g, '\\"'); }
 
 // ─── Keyboard Shortcuts ─────────────────────────────────────
 document.addEventListener("keydown", (e) => {
-    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
-
+    if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName)) return;
     switch (e.key.toLowerCase()) {
-        case "s":
-            if (!state.cameraActive) startCamera();
-            break;
-        case "q":
-            if (state.cameraActive) stopCamera();
-            break;
-        case "r":
-            resetSentence();
-            break;
-        case " ":
-            e.preventDefault();
-            addSpace();
-            break;
-        case "backspace":
-            e.preventDefault();
-            doBackspace();
-            break;
-        case "enter":
-            speakSentence();
-            break;
-        case "escape":
-            closeLibrary();
-            closeAddSign();
-            break;
+        case "s": if (!state.cameraActive) startCamera(); break;
+        case "q": if (state.cameraActive) stopCamera(); break;
+        case "r": resetSentence(); break;
+        case " ": e.preventDefault(); addSpace(); break;
+        case "backspace": e.preventDefault(); doBackspace(); break;
+        case "enter": speakSentence(); break;
+        case "escape": closeLibrary(); closeAddSign(); break;
     }
 });
 
@@ -520,32 +592,23 @@ dom.btnClear.addEventListener("click", resetSentence);
 dom.btnLibrary.addEventListener("click", openLibrary);
 dom.btnAddSign.addEventListener("click", openAddSign);
 dom.autoSpeakToggle.addEventListener("change", toggleAutoSpeak);
-
-// Mode buttons
 dom.modeButtons.querySelectorAll('.mode-btn').forEach(btn => {
     btn.addEventListener('click', () => setMode(btn.dataset.mode));
 });
-
-// Library modal
 dom.libraryClose.addEventListener("click", closeLibrary);
-dom.libraryModal.addEventListener("click", (e) => {
-    if (e.target === dom.libraryModal) closeLibrary();
-});
+dom.libraryModal.addEventListener("click", (e) => { if (e.target === dom.libraryModal) closeLibrary(); });
 dom.librarySearch.addEventListener("input", filterLibrary);
-
-// Add sign modal
 dom.addSignClose.addEventListener("click", closeAddSign);
-dom.addSignModal.addEventListener("click", (e) => {
-    if (e.target === dom.addSignModal) closeAddSign();
-});
+dom.addSignModal.addEventListener("click", (e) => { if (e.target === dom.addSignModal) closeAddSign(); });
 dom.btnSaveSign.addEventListener("click", saveNewSign);
 
-// ─── Initial Status Check ───────────────────────────────────
+// ─── Init ───────────────────────────────────────────────────
 (async function init() {
     const status = await apiCall("/status");
     if (status) {
         state.modelReady = status.model_ready;
         state.currentMode = status.mode || 'auto';
+        state.ttsServerAvailable = status.tts_server || false;
         if (status.model_ready) {
             dom.modelStatusIcon.textContent = "✅";
             dom.modelStatusLabel.textContent = "Model Ready";

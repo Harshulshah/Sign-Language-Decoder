@@ -1,16 +1,14 @@
 # Core Dependencies
 flask==3.0.0
 flask-cors==4.0.0
+gunicorn==21.2.0
 
 # Computer Vision & ML
-opencv-python==4.9.0.80
+opencv-python-headless==4.9.0.80
 mediapipe==0.10.9
 numpy==1.26.4
-tensorflow==2.15.0
+tensorflow-cpu==2.15.0
 scikit-learn==1.4.0
-
-# Text-to-Speech
-pyttsx3==2.90
 
 # Utilities
 Pillow==10.2.0

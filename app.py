@@ -3,10 +3,10 @@ Sign Language Decoder — Main Application
 A real-time AI-powered sign language recognition system.
 
 Usage:
-    python app.py              Start the Flask web server
-    python app.py --generate   Generate a demo model first, then start
+    python app.py              Start the Flask web server (local dev)
+    gunicorn app:create_app()  Start with gunicorn (production)
 
-Server runs at: http://127.0.0.1:5000
+Server runs at: http://127.0.0.1:5000 (local) or assigned port (cloud)
 """
 
 import os
@@ -47,6 +47,26 @@ def create_app():
     def not_found(e):
         return render_template("index.html"), 404
 
+    # Initialize components on first request or at startup
+    with app.app_context():
+        # Setup logging
+        setup_logging(log_file=LOG_FILE, log_level=LOG_LEVEL)
+
+        # Ensure directories exist
+        ensure_dirs(MODEL_DIR, DATA_DIR, STATIC_DIR, TEMPLATE_DIR)
+
+        # Generate demo model if needed
+        if not os.path.exists(MODEL_PATH):
+            try:
+                logging.getLogger(__name__).info("No model found — generating demo model...")
+                from model.train import generate_demo_model
+                generate_demo_model()
+            except Exception as e:
+                logging.getLogger(__name__).warning(f"Demo model generation skipped: {e}")
+
+        # Initialize detection components
+        init_components()
+
     return app
 
 
@@ -61,7 +81,7 @@ def main():
         help=f"Server host (default: {FLASK_HOST})",
     )
     parser.add_argument(
-        "--port", type=int, default=FLASK_PORT,
+        "--port", type=int, default=int(os.environ.get("PORT", FLASK_PORT)),
         help=f"Server port (default: {FLASK_PORT})",
     )
     args = parser.parse_args()
@@ -73,16 +93,19 @@ def main():
     # Ensure directories exist
     ensure_dirs(MODEL_DIR, DATA_DIR, STATIC_DIR, TEMPLATE_DIR)
 
-    # Generate demo model if requested or if no model exists
+    # Generate demo model if requested
     if args.generate or not os.path.exists(MODEL_PATH):
         logger.info("No model found — generating demo model...")
         print("\n" + "=" * 60)
         print("  Generating demo model (one-time setup)...")
         print("  This will take about 30 seconds.")
         print("=" * 60 + "\n")
-        from model.train import generate_demo_model
-        generate_demo_model()
-        print("\n  Demo model generated successfully!\n")
+        try:
+            from model.train import generate_demo_model
+            generate_demo_model()
+            print("\n  Demo model generated successfully!\n")
+        except Exception as e:
+            logger.warning(f"Demo model generation skipped: {e}")
 
     # Initialize components
     init_components()
@@ -99,7 +122,7 @@ def main():
     app.run(
         host=args.host,
         port=args.port,
-        debug=False,  # Debug off because of threading
+        debug=False,
         threaded=True,
     )
 

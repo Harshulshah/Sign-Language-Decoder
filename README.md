@@ -1,208 +1,95 @@
-# 🤟 AI Sign Language Decoder
+# 🤟 Sign Language Decoder
 
-A full-stack, production-ready AI-powered **Sign Language Decoder** system built with Python. Uses your device's live camera feed to detect and translate sign language gestures into text and speech in **real time**.
+AI-powered real-time sign language recognition system with **136+ signs**, hybrid gesture detection, intelligent word formation, and text-to-speech output.
 
-![Python](https://img.shields.io/badge/Python-3.8+-blue?logo=python)
-![Flask](https://img.shields.io/badge/Flask-3.0-green?logo=flask)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-orange?logo=tensorflow)
-![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10-red?logo=google)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![Flask](https://img.shields.io/badge/Flask-3.0-green)
+![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10-orange)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-red)
 
----
+## ✨ Features
 
-## 🎯 Features
+- **🔤 136+ Signs** — Full ASL alphabet (A-Z), numbers (0-9), and 100+ common words
+- **🤖 Hybrid Detection** — Rule-based static classifier + motion trajectory detector
+- **💡 Smart Suggestions** — Auto-complete, spell correction, next-word prediction
+- **🔊 Text-to-Speech** — Speak sentences using Web Speech API
+- **📚 Sign Library** — Browse all signs with descriptions and categories
+- **➕ Custom Signs** — Add your own sign definitions
+- **🎨 Premium UI** — Dark glassmorphism theme with micro-animations
 
-| Feature | Description |
-|---|---|
-| **Real-Time Detection** | Live webcam gesture recognition at ≥20 FPS |
-| **Hand Tracking** | MediaPipe-powered 21-keypoint landmark detection |
-| **ML Prediction** | Neural network classifies A–Z, 0–9, and common words |
-| **Sentence Builder** | Auto-builds sentences from detected signs |
-| **Text-to-Speech** | Convert output text to voice with one click |
-| **Confidence Scores** | Real-time accuracy display with color coding |
-| **Smooth Predictions** | Majority voting eliminates flickering |
-| **Modern UI** | Glassmorphism dark theme with animations |
-| **Keyboard Shortcuts** | Full keyboard control for power users |
+## 🚀 Quick Start (Local)
 
----
+```bash
+# Clone the repo
+git clone https://github.com/Harshulshah/Sign-Language-Decoder.git
+cd Sign-Language-Decoder
 
-## 🏗️ Project Structure
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the app
+python app.py
+
+# Open http://127.0.0.1:5000
+```
+
+## ☁️ Live Demo
+
+Deploy on Render.com:
+
+1. Fork this repo
+2. Go to [render.com](https://render.com) → New → Web Service
+3. Connect your GitHub repo
+4. Select **Docker** runtime
+5. Deploy! 🎉
+
+## 📁 Project Structure
 
 ```
 sign-language-decoder/
-├── app.py                  # Flask server entry point
+├── app.py                  # Flask application entry point
 ├── config.py               # All configuration settings
+├── Dockerfile              # Cloud deployment container
+├── render.yaml             # Render.com deployment config
 ├── requirements.txt        # Python dependencies
-├── README.md               # This file
+│
+├── api/
+│   └── routes.py           # REST API endpoints (cloud-ready)
 │
 ├── model/
-│   ├── train.py            # Data collection & model training
-│   ├── predict.py          # Gesture prediction engine
-│   └── sign_language_model.h5  # Trained model (auto-generated)
+│   ├── hand_rules.py       # Rule-based ASL classifier (A-Z, 0-9)
+│   ├── motion_detector.py  # Dynamic gesture detection
+│   └── predict.py          # Hybrid prediction pipeline
 │
 ├── utils/
 │   ├── hand_tracker.py     # MediaPipe hand detection
-│   ├── preprocessing.py    # Feature extraction & normalization
-│   ├── smoothing.py        # Prediction smoothing (majority voting)
-│   └── helpers.py          # Logging, JSON, utilities
+│   ├── smoothing.py        # Prediction stabilization (70% majority)
+│   └── word_engine.py      # NLP word formation engine
 │
-├── api/
-│   └── routes.py           # Flask API endpoints
-│
-├── static/
-│   ├── style.css           # Premium glassmorphism CSS
-│   └── script.js           # Frontend logic
+├── data/
+│   ├── sign_library.json   # 136 sign definitions
+│   ├── word_dictionary.json# Dictionary + bigrams
+│   └── custom_signs.json   # User-added signs
 │
 ├── templates/
-│   └── index.html          # Web interface
+│   └── index.html          # Main UI page
 │
-└── data/
-    └── dataset_placeholder/
+└── static/
+    ├── style.css           # Premium dark theme
+    └── script.js           # Client-side camera + UI logic
 ```
 
----
-
-## ⚡ Quick Start
-
-### 1. Clone & Navigate
-
-```bash
-cd sign-language-decoder
-```
-
-### 2. Create Virtual Environment (Recommended)
-
-```bash
-python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # macOS/Linux
-```
-
-### 3. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Run the Application
-
-```bash
-python app.py
-```
-
-The app will:
-1. Auto-generate a demo model (first run only, ~30 seconds)
-2. Start the Flask server
-3. Open at **http://127.0.0.1:5000**
-
----
-
-## 🌐 API Endpoints
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/` | GET | Main web interface |
-| `/api/video_feed` | GET | MJPEG video stream |
-| `/api/start_camera` | POST | Start webcam capture |
-| `/api/stop_camera` | POST | Stop webcam capture |
-| `/api/predict` | GET | Get current prediction & sentence |
-| `/api/reset` | POST | Clear sentence |
-| `/api/speak` | POST | Text-to-speech output |
-| `/api/status` | GET | System status |
-| `/api/add_char` | POST | Manually add character |
-| `/api/backspace` | POST | Delete last character |
-
----
-
-## 🎮 Keyboard Shortcuts
-
-| Key | Action |
-|---|---|
-| `S` | Start camera |
-| `Q` | Stop camera |
-| `R` | Reset/clear text |
-| `Space` | Add space |
-| `Enter` | Speak output |
-| `Backspace` | Delete last character |
-
----
-
-## 🤖 Training Your Own Model
-
-### Collect Data
-
-```bash
-python model/train.py --collect --samples 100
-```
-- Shows each gesture class and records hand landmarks via webcam
-- Press `S` to start collecting each class, `Q` to quit
-
-### Train Model
-
-```bash
-python model/train.py --train --epochs 50
-```
-
-### Generate Demo Model (Quick Start)
-
-```bash
-python model/train.py --demo
-```
-
----
-
-## 📋 Supported Gestures
-
-- **Alphabets**: A–Z
-- **Numbers**: 0–9
-- **Common Words**: HELLO, THANKS, YES, NO, PLEASE, SORRY, HELP, LOVE
-- **Special**: SPACE, DELETE
-
----
-
-## 🔧 Configuration
-
-Edit `config.py` to customize:
-
-- Camera resolution and FPS
-- Confidence threshold
-- Smoothing window size
-- Flask host and port
-- MediaPipe detection parameters
-
----
-
-## 🧪 Tech Stack
+## 🛠 Tech Stack
 
 | Component | Technology |
-|---|---|
-| Backend | Flask 3.0 |
-| Computer Vision | OpenCV 4.9 |
+|-----------|-----------|
+| Backend | Flask, Python 3.11 |
 | Hand Detection | MediaPipe Hands |
-| ML Framework | TensorFlow / Keras |
-| Text-to-Speech | pyttsx3 |
-| Frontend | HTML5, CSS3, Vanilla JS |
-| Architecture | REST API + MJPEG streaming |
-
----
-
-## 🚀 Future Scope
-
-- Multi-language translation support
-- LSTM model for sequence/motion gestures
-- Mobile responsive + PWA
-- WebRTC for smoother streaming
-- Gesture dataset collection tool
-- Accuracy & performance dashboard
-- Docker deployment
-- AR/VR integration
-
----
+| ML Model | Rule-based geometry + TensorFlow |
+| Frontend | Vanilla JS, CSS (Glassmorphism) |
+| TTS | Web Speech API |
+| Deployment | Docker, Render.com |
 
 ## 📄 License
 
-This project is licensed under the MIT License.
-
----
-
-**Built with ❤️ using AI & Computer Vision**
+MIT License

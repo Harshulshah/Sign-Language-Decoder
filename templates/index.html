@@ -59,7 +59,10 @@
 
                 <!-- Video Wrapper -->
                 <div class="video-wrapper" id="videoWrapper">
-                    <img class="video-feed" id="videoFeed" alt="Live camera feed" style="display:none;">
+                    <!-- Client-side camera video element -->
+                    <video class="video-feed" id="videoFeed" autoplay playsinline muted style="display:none;"></video>
+                    <!-- Fallback: server-side MJPEG for local mode -->
+                    <img class="video-feed" id="videoFeedMjpeg" alt="Live camera feed" style="display:none;">
 
                     <div class="video-placeholder" id="videoPlaceholder">
                         <span class="icon-large">🤟</span>
@@ -82,6 +85,9 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Hidden canvas for frame capture -->
+                <canvas id="captureCanvas" style="display:none;"></canvas>
 
                 <!-- Controls -->
                 <div class="controls-bar">
