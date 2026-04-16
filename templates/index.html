@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-powered Sign Language Decoder — real-time gesture recognition with 136+ signs, word formation, and speech output">
+    <title>Sign Language Decoder — AI Gesture Recognition</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤟</text></svg>">
+</head>
+<body>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="app-container">
+
+        <!-- ═══ Header ═══ -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1 class="app-title">🤟 Sign Language Decoder</h1>
+                <p class="app-subtitle">AI-Powered Real-Time Gesture Recognition • 136+ Signs</p>
+            </div>
+            <div class="header-right">
+                <div class="mode-toggle">
+                    <label class="mode-label">Mode:</label>
+                    <div class="mode-buttons" id="modeButtons">
+                        <button class="mode-btn active" data-mode="auto">🤖 Auto</button>
+                        <button class="mode-btn" data-mode="alphabet">🔤 Alphabet</button>
+                        <button class="mode-btn" data-mode="words">💬 Words</button>
+                    </div>
+                </div>
+                <div class="status-badge" id="statusBadge">
+                    <span class="status-dot"></span>
+                    <span id="statusText">Camera Inactive</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- ═══ Main Content ═══ -->
+        <main class="main-content">
+
+            <!-- ─── Left: Video Section ─── -->
+            <section class="video-section glass-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="icon">🎥</span> Live Camera Feed
+                    </h2>
+                    <div class="model-status" id="modelStatus">
+                        <span class="status-icon" id="modelStatusIcon">⏳</span>
+                        <div class="info">
+                            <div class="label" id="modelStatusLabel">Checking Model...</div>
+                            <div class="detail" id="modelStatusDetail">Please wait</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Wrapper -->
+                <div class="video-wrapper" id="videoWrapper">
+                    <img class="video-feed" id="videoFeed" alt="Live camera feed" style="display:none;">
+
+                    <div class="video-placeholder" id="videoPlaceholder">
+                        <span class="icon-large">🤟</span>
+                        <p>Click <strong>Start Camera</strong> to begin detection</p>
+                        <p style="font-size:0.78rem; opacity:0.5;">Press <kbd>S</kbd> to start</p>
+                    </div>
+
+                    <div class="live-badge" id="liveBadge">
+                        <span class="live-dot"></span>
+                        LIVE
+                    </div>
+
+                    <!-- Prediction overlay -->
+                    <div class="prediction-overlay" id="predictionOverlay">
+                        <div class="prediction-label" id="predictionLabel">—</div>
+                        <div class="prediction-conf" id="predictionConf">Waiting for gesture...</div>
+                        <div class="prediction-category" id="predictionCategory"></div>
+                        <div class="confidence-bar-bg">
+                            <div class="confidence-bar-fill" id="confidenceBarFill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="controls-bar">
+                    <button class="btn btn-primary" id="btnStartCamera">
+                        <span class="icon">📷</span> Start Camera
+                    </button>
+                    <button class="btn btn-danger" id="btnStopCamera" style="display:none;">
+                        <span class="icon">⏹️</span> Stop Camera
+                    </button>
+                    <button class="btn" id="btnReset">
+                        <span class="icon">🗑️</span> Clear
+                    </button>
+                    <button class="btn btn-success" id="btnSpeak">
+                        <span class="icon">🔊</span> Speak
+                    </button>
+                    <button class="btn" id="btnSpace">
+                        <span class="icon">⎵</span> Space
+                    </button>
+                    <button class="btn" id="btnBackspace">
+                        <span class="icon">⌫</span> Delete
+                    </button>
+                    <label class="auto-speak-toggle">
+                        <input type="checkbox" id="autoSpeakToggle">
+                        <span>Auto-Speak</span>
+                    </label>
+                </div>
+
+                <!-- Word Suggestions Bar -->
+                <div class="suggestions-bar" id="suggestionsBar">
+                    <div class="suggestions-label">💡 Suggestions:</div>
+                    <div class="suggestion-chips" id="suggestionChips">
+                        <span class="suggestion-placeholder">Start typing to see suggestions...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ─── Right: Info Panel ─── -->
+            <aside class="right-panel">
+
+                <!-- Sentence Builder -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <span class="icon">📝</span> Sentence Builder
+                        </h2>
+                    </div>
+                    <div class="sentence-display empty" id="sentenceDisplay">
+                        <span class="cursor-blink"></span>
+                    </div>
+                    <div class="partial-word" id="partialWord"></div>
+                    <div class="sentence-actions">
+                        <button class="btn btn-success btn-sm" id="btnSpeakSentence">
+                            <span class="icon">🔊</span> Speak
+                        </button>
+                        <button class="btn btn-danger btn-sm" id="btnClear">
+                            <span class="icon">🗑️</span> Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <span class="icon">📊</span> Live Statistics
+                        </h2>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="statPrediction">—</div>
+                            <div class="stat-label">Current Sign</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statConfidence">0%</div>
+                            <div class="stat-label">Confidence</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statSigns">0</div>
+                            <div class="stat-label">Signs Detected</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statTime">0:00</div>
+                            <div class="stat-label">Session Time</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Signs -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <span class="icon">🕐</span> Recent Signs
+                        </h2>
+                    </div>
+                    <div class="recent-signs" id="recentSigns">
+                        <span class="sign-chip muted">No signs yet</span>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="glass-card compact">
+                    <div class="quick-actions">
+                        <button class="btn btn-outline" id="btnLibrary">
+                            <span class="icon">📚</span> Sign Library
+                        </button>
+                        <button class="btn btn-outline" id="btnAddSign">
+                            <span class="icon">➕</span> Add Sign
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Keyboard Shortcuts -->
+                <div class="glass-card compact">
+                    <div class="card-title" style="margin-bottom:8px;">
+                        <span class="icon">⌨️</span> Shortcuts
+                    </div>
+                    <div class="shortcuts-grid">
+                        <kbd>S</kbd><span>Start</span>
+                        <kbd>Q</kbd><span>Stop</span>
+                        <kbd>R</kbd><span>Reset</span>
+                        <kbd>Space</kbd><span>Space</span>
+                        <kbd>Enter</kbd><span>Speak</span>
+                        <kbd>⌫</kbd><span>Delete</span>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- ═══ Library Modal ═══ -->
+    <div class="modal-overlay" id="libraryModal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h2>📚 Sign Language Library</h2>
+                <button class="modal-close" id="libraryClose">&times;</button>
+            </div>
+            <div class="modal-search">
+                <input type="text" id="librarySearch" placeholder="Search signs..." class="search-input">
+            </div>
+            <div class="modal-tabs" id="libraryTabs">
+                <button class="tab active" data-cat="all">All</button>
+            </div>
+            <div class="modal-body" id="libraryGrid">
+                <div class="loading-text">Loading library...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Add Sign Modal ═══ -->
+    <div class="modal-overlay" id="addSignModal">
+        <div class="modal glass-card modal-sm">
+            <div class="modal-header">
+                <h2>➕ Add New Sign</h2>
+                <button class="modal-close" id="addSignClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Sign Label</label>
+                    <input type="text" id="newSignLabel" placeholder="e.g. FAMILY" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" id="newSignDescription" placeholder="How to make this sign" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="newSignCategory" class="form-input">
+                        <option value="custom">Custom</option>
+                        <option value="greetings">Greetings</option>
+                        <option value="daily_use">Daily Use</option>
+                        <option value="actions">Actions</option>
+                        <option value="emotions">Emotions</option>
+                        <option value="emergency">Emergency</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary btn-full" id="btnSaveSign">
+                    <span class="icon">💾</span> Save Sign
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
