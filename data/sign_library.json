@@ -1,0 +1,182 @@
+{
+  "version": "2.0",
+  "description": "Complete ASL Sign Library — Alphabets, Numbers, Words",
+  "categories": {
+    "alphabets": {
+      "label": "Alphabets (A-Z)", 
+      "icon": "🔤",
+      "signs": {
+        "A": {"type": "static", "description": "Fist with thumb beside index finger", "rules": {"thumb_out": true, "index_curled": true, "middle_curled": true, "ring_curled": true, "pinky_curled": true}},
+        "B": {"type": "static", "description": "Four fingers straight up, thumb folded across palm", "rules": {"thumb_out": false, "index_up": true, "middle_up": true, "ring_up": true, "pinky_up": true}},
+        "C": {"type": "static", "description": "Curved hand forming a C shape", "rules": {"hand_shape": "c_curve", "thumb_index_gap": [0.3, 0.9]}},
+        "D": {"type": "static", "description": "Index finger up, thumb touches middle fingertip", "rules": {"index_up": true, "middle_curled": true, "ring_curled": true, "pinky_curled": true, "thumb_touches": "middle_tip"}},
+        "E": {"type": "static", "description": "All fingers curled, thumb tucked", "rules": {"thumb_out": false, "index_curled": true, "middle_curled": true, "ring_curled": true, "pinky_curled": true}},
+        "F": {"type": "static", "description": "Thumb and index touch forming circle, other fingers up", "rules": {"thumb_touches": "index_tip", "middle_up": true, "ring_up": true, "pinky_up": true}},
+        "G": {"type": "static", "description": "Index finger pointing sideways, thumb parallel", "rules": {"index_up": true, "index_direction": "sideways", "middle_curled": true, "ring_curled": true, "pinky_curled": true}},
+        "H": {"type": "static", "description": "Index and middle fingers pointing sideways together", "rules": {"index_up": true, "middle_up": true, "index_direction": "sideways", "ring_curled": true, "pinky_curled": true}},
+        "I": {"type": "static", "description": "Pinky finger up, all others curled", "rules": {"pinky_up": true, "index_curled": true, "middle_curled": true, "ring_curled": true}},
+        "J": {"type": "dynamic", "description": "Pinky up then draw J shape in air", "rules": {"start_shape": "I", "motion": "j_curve"}},
+        "K": {"type": "static", "description": "Index and middle up in V, thumb between them", "rules": {"index_up": true, "middle_up": true, "thumb_out": true, "ring_curled": true, "pinky_curled": true, "thumb_between_index_middle": true}},
+        "L": {"type": "static", "description": "L shape — index up, thumb extended outward at right angle", "rules": {"index_up": true, "thumb_out": true, "middle_curled": true, "ring_curled": true, "pinky_curled": true, "index_direction": "up"}},
+        "M": {"type": "static", "description": "Three fingers over thumb in fist", "rules": {"thumb_under": true, "fingers_over_thumb": 3, "index_curled": true, "middle_curled": true, "ring_curled": true, "pinky_curled": true}},
+        "N": {"type": "static", "description": "Two fingers over thumb in fist", "rules": {"thumb_under": true, "fingers_over_thumb": 2, "index_curled": true, "middle_curled": true, "ring_curled": true, "pinky_curled": true}},
+        "O": {"type": "static", "description": "All fingers curled to meet thumb forming O", "rules": {"thumb_touches": "index_tip", "all_fingers_curled_to_thumb": true}},
+        "P": {"type": "static", "description": "Like K but hand pointing downward", "rules": {"index_up": true, "middle_up": true, "hand_direction": "down", "ring_curled": true, "pinky_curled": true}},
+        "Q": {"type": "static", "description": "Like G but hand pointing downward", "rules": {"index_up": true, "hand_direction": "down", "middle_curled": true, "ring_curled": true, "pinky_curled": true}},
+        "R": {"type": "static", "description": "Index and middle crossed", "rules": {"index_up": true, "middle_up": true, "fingers_crossed": true, "ring_curled": true, "pinky_curled": true}},
+        "S": {"type": "static", "description": "Fist with thumb over fingers", "rules": {"thumb_across_palm": true, "index_curled": true, "middle_curled": true, "ring_curled": true, "pinky_curled": true}},
+        "T": {"type": "static", "description": "Thumb between index and middle in fist", "rules": {"thumb_between_index_middle": true, "index_curled": true, "middle_curled": true, "ring_curled": true, "pinky_curled": true}},
+        "U": {"type": "static", "description": "Index and middle up together, thumb inward", "rules": {"index_up": true, "middle_up": true, "fingers_together": true, "thumb_out": false, "ring_curled": true, "pinky_curled": true, "index_direction": "up"}},
+        "V": {"type": "static", "description": "Peace sign — index and middle spread apart", "rules": {"index_up": true, "middle_up": true, "fingers_spread": true, "ring_curled": true, "pinky_curled": true, "index_direction": "up"}},
+        "W": {"type": "static", "description": "Three fingers up and spread", "rules": {"index_up": true, "middle_up": true, "ring_up": true, "pinky_curled": true}},
+        "X": {"type": "static", "description": "Index finger hooked (partially curled)", "rules": {"index_hooked": true, "middle_curled": true, "ring_curled": true, "pinky_curled": true}},
+        "Y": {"type": "static", "description": "Thumb and pinky extended (hang loose)", "rules": {"thumb_out": true, "pinky_up": true, "index_curled": true, "middle_curled": true, "ring_curled": true}},
+        "Z": {"type": "dynamic", "description": "Index finger draws Z shape in air", "rules": {"start_shape": "1", "motion": "z_zigzag"}}
+      }
+    },
+    "numbers": {
+      "label": "Numbers (0-9)",
+      "icon": "🔢",
+      "signs": {
+        "0": {"type": "static", "description": "O shape — all fingers touch thumb", "rules": {"hand_shape": "o_circle"}},
+        "1": {"type": "static", "description": "Index finger up only", "rules": {"index_up": true, "middle_curled": true, "ring_curled": true, "pinky_curled": true, "thumb_out": false, "index_direction": "up"}},
+        "2": {"type": "static", "description": "Index + middle up spread (same as V)", "rules": {"index_up": true, "middle_up": true, "fingers_spread": true, "ring_curled": true, "pinky_curled": true}},
+        "3": {"type": "static", "description": "Thumb + index + middle extended", "rules": {"thumb_out": true, "index_up": true, "middle_up": true, "ring_curled": true, "pinky_curled": true}},
+        "4": {"type": "static", "description": "Four fingers up, thumb curled", "rules": {"thumb_out": false, "index_up": true, "middle_up": true, "ring_up": true, "pinky_up": true}},
+        "5": {"type": "static", "description": "All five fingers spread open", "rules": {"thumb_out": true, "index_up": true, "middle_up": true, "ring_up": true, "pinky_up": true}},
+        "6": {"type": "static", "description": "Thumb and pinky touch, other fingers up", "rules": {"thumb_touches": "pinky_tip", "index_up": true, "middle_up": true, "ring_up": true}},
+        "7": {"type": "static", "description": "Thumb and ring touch, others up", "rules": {"thumb_touches": "ring_tip", "index_up": true, "middle_up": true, "pinky_up": true}},
+        "8": {"type": "static", "description": "Thumb and middle touch, others up", "rules": {"thumb_touches": "middle_tip", "index_up": true, "ring_up": true, "pinky_up": true}},
+        "9": {"type": "static", "description": "Thumb and index touch, others up", "rules": {"thumb_touches": "index_tip", "middle_up": true, "ring_up": true, "pinky_up": true}}
+      }
+    },
+    "greetings": {
+      "label": "Greetings",
+      "icon": "👋",
+      "signs": {
+        "HELLO": {"type": "dynamic", "description": "Open hand wave side to side", "rules": {"hand_shape": "open_palm", "motion": "wave_horizontal"}},
+        "HI": {"type": "dynamic", "description": "Quick open hand wave", "rules": {"hand_shape": "open_palm", "motion": "wave_small"}},
+        "BYE": {"type": "dynamic", "description": "Open hand wave goodbye", "rules": {"hand_shape": "open_palm", "motion": "wave_vertical"}},
+        "GOOD MORNING": {"type": "dynamic", "description": "Flat hand from chin outward + rising motion", "rules": {"hand_shape": "flat_hand", "motion": "chin_out_rise"}},
+        "GOOD NIGHT": {"type": "dynamic", "description": "Flat hand descending", "rules": {"hand_shape": "flat_hand", "motion": "descend"}},
+        "WELCOME": {"type": "dynamic", "description": "Open hand sweeping toward body", "rules": {"hand_shape": "open_palm", "motion": "sweep_inward"}},
+        "NICE TO MEET YOU": {"type": "dynamic", "description": "Both hands flat, come together", "rules": {"hand_shape": "flat_hand", "motion": "hands_meet", "two_hands": true}}
+      }
+    },
+    "polite_words": {
+      "label": "Polite Words",
+      "icon": "🙏",
+      "signs": {
+        "THANK YOU": {"type": "dynamic", "description": "Flat hand from chin forward", "rules": {"hand_shape": "flat_hand", "motion": "chin_forward"}},
+        "PLEASE": {"type": "dynamic", "description": "Flat hand circles on chest", "rules": {"hand_shape": "flat_hand", "motion": "chest_circle"}},
+        "SORRY": {"type": "dynamic", "description": "Fist circles on chest", "rules": {"hand_shape": "fist", "motion": "chest_circle"}},
+        "EXCUSE ME": {"type": "dynamic", "description": "Fingertips brush other palm", "rules": {"hand_shape": "flat_hand", "motion": "brush_palm", "two_hands": true}},
+        "YOU'RE WELCOME": {"type": "dynamic", "description": "Flat hand from chin descending", "rules": {"hand_shape": "flat_hand", "motion": "chin_descend"}}
+      }
+    },
+    "questions": {
+      "label": "Questions",
+      "icon": "❓",
+      "signs": {
+        "WHAT": {"type": "dynamic", "description": "Open hands palms up, shake slightly", "rules": {"hand_shape": "open_palm", "motion": "shake_palms_up"}},
+        "WHY": {"type": "dynamic", "description": "Touch forehead then Y handshape", "rules": {"hand_shape": "y_hand", "motion": "forehead_pull"}},
+        "WHERE": {"type": "dynamic", "description": "Index finger wagging side to side", "rules": {"hand_shape": "pointing", "motion": "wag_horizontal"}},
+        "WHEN": {"type": "dynamic", "description": "Index finger circles then points", "rules": {"hand_shape": "pointing", "motion": "circle_point"}},
+        "HOW": {"type": "dynamic", "description": "Knuckles together, roll open", "rules": {"hand_shape": "fist", "motion": "roll_open", "two_hands": true}},
+        "WHO": {"type": "dynamic", "description": "Index finger circles near mouth", "rules": {"hand_shape": "pointing", "motion": "circle_mouth"}},
+        "HOW MUCH": {"type": "dynamic", "description": "Curved hands facing up, rise together", "rules": {"hand_shape": "curved", "motion": "rise_together", "two_hands": true}}
+      }
+    },
+    "actions": {
+      "label": "Actions",
+      "icon": "⚡",
+      "signs": {
+        "GO": {"type": "dynamic", "description": "Both index fingers point and move forward", "rules": {"hand_shape": "pointing", "motion": "push_forward", "two_hands": true}},
+        "COME": {"type": "dynamic", "description": "Index finger beckoning toward body", "rules": {"hand_shape": "pointing", "motion": "beckon"}},
+        "STOP": {"type": "static", "description": "Flat hand palm facing outward", "rules": {"hand_shape": "open_palm", "palm_facing": "forward", "index_up": true, "middle_up": true, "ring_up": true, "pinky_up": true}},
+        "WAIT": {"type": "dynamic", "description": "Open hands facing up, wiggle fingers", "rules": {"hand_shape": "open_palm", "motion": "wiggle_up"}},
+        "EAT": {"type": "dynamic", "description": "Flat O hand moves to mouth repeatedly", "rules": {"hand_shape": "flat_o", "motion": "to_mouth_repeat"}},
+        "DRINK": {"type": "dynamic", "description": "C-hand tilts to mouth", "rules": {"hand_shape": "c_curve", "motion": "tilt_to_mouth"}},
+        "HELP": {"type": "dynamic", "description": "Fist on flat palm, both rise", "rules": {"hand_shape": "fist_on_palm", "motion": "rise", "two_hands": true}},
+        "WALK": {"type": "dynamic", "description": "Two fingers walk on other palm", "rules": {"hand_shape": "v_hand", "motion": "walking"}},
+        "RUN": {"type": "dynamic", "description": "L-hands hook, wiggle while moving", "rules": {"hand_shape": "l_hand", "motion": "hook_wiggle"}},
+        "WORK": {"type": "dynamic", "description": "Fist taps other fist", "rules": {"hand_shape": "fist", "motion": "tap_fist", "two_hands": true}},
+        "PLAY": {"type": "dynamic", "description": "Y-hands shake", "rules": {"hand_shape": "y_hand", "motion": "shake"}},
+        "LEARN": {"type": "dynamic", "description": "Flat hand picks up from palm to forehead", "rules": {"hand_shape": "flat_hand", "motion": "palm_to_forehead"}},
+        "WRITE": {"type": "dynamic", "description": "Mime writing on palm", "rules": {"hand_shape": "pinch", "motion": "write_on_palm", "two_hands": true}},
+        "READ": {"type": "dynamic", "description": "V-hand moves down flat palm", "rules": {"hand_shape": "v_hand", "motion": "scan_down"}},
+        "OPEN": {"type": "dynamic", "description": "Both flat hands together then apart", "rules": {"hand_shape": "flat_hand", "motion": "apart", "two_hands": true}},
+        "CLOSE": {"type": "dynamic", "description": "Both flat hands apart then together", "rules": {"hand_shape": "flat_hand", "motion": "together", "two_hands": true}},
+        "GIVE": {"type": "dynamic", "description": "Flat O hand pushes forward", "rules": {"hand_shape": "flat_o", "motion": "push_forward"}},
+        "TAKE": {"type": "dynamic", "description": "Open hand grabs and pulls back", "rules": {"hand_shape": "open_to_fist", "motion": "pull_back"}},
+        "SIT": {"type": "dynamic", "description": "Two bent fingers sit on other two fingers", "rules": {"hand_shape": "bent_v", "motion": "sit_on_fingers", "two_hands": true}},
+        "STAND": {"type": "dynamic", "description": "V-hand stands on flat palm", "rules": {"hand_shape": "v_hand", "motion": "stand_on_palm", "two_hands": true}}
+      }
+    },
+    "emotions": {
+      "label": "Emotions",
+      "icon": "❤️",
+      "signs": {
+        "HAPPY": {"type": "dynamic", "description": "Flat hand brushes up chest repeatedly", "rules": {"hand_shape": "flat_hand", "motion": "brush_up_chest"}},
+        "SAD": {"type": "dynamic", "description": "Both hands slide down face", "rules": {"hand_shape": "open_palm", "motion": "slide_down_face"}},
+        "ANGRY": {"type": "dynamic", "description": "Claw hand pulls away from face", "rules": {"hand_shape": "claw", "motion": "pull_from_face"}},
+        "SCARED": {"type": "dynamic", "description": "Both fists open suddenly near chest", "rules": {"hand_shape": "fist_to_open", "motion": "burst_open", "two_hands": true}},
+        "EXCITED": {"type": "dynamic", "description": "Both open hands alternate brushing up chest", "rules": {"hand_shape": "open_palm", "motion": "alternate_brush_up", "two_hands": true}},
+        "TIRED": {"type": "dynamic", "description": "Both bent hands drop from chest", "rules": {"hand_shape": "bent", "motion": "drop_from_chest", "two_hands": true}},
+        "LOVE": {"type": "static", "description": "ILY handshape — thumb, index, and pinky extended", "rules": {"thumb_out": true, "index_up": true, "middle_curled": true, "ring_curled": true, "pinky_up": true}},
+        "LIKE": {"type": "dynamic", "description": "Thumb and middle finger pull from chest", "rules": {"hand_shape": "open_to_pinch", "motion": "pull_from_chest"}},
+        "HATE": {"type": "dynamic", "description": "Both middle fingers flick outward", "rules": {"hand_shape": "middle_flick", "motion": "flick_out", "two_hands": true}},
+        "SURPRISE": {"type": "dynamic", "description": "Both index fingers and thumbs flick open at eyes", "rules": {"hand_shape": "pinch_to_open", "motion": "flick_at_eyes", "two_hands": true}}
+      }
+    },
+    "daily_use": {
+      "label": "Daily Use",
+      "icon": "🏠",
+      "signs": {
+        "YES": {"type": "dynamic", "description": "Fist nods up and down", "rules": {"hand_shape": "fist", "motion": "nod_vertical"}},
+        "NO": {"type": "dynamic", "description": "Index and middle finger snap to thumb", "rules": {"hand_shape": "n_hand", "motion": "snap_to_thumb"}},
+        "MAYBE": {"type": "dynamic", "description": "Both flat hands alternate up and down", "rules": {"hand_shape": "flat_hand", "motion": "alternate_up_down", "two_hands": true}},
+        "MORE": {"type": "dynamic", "description": "Both flat O hands tap together", "rules": {"hand_shape": "flat_o", "motion": "tap_together", "two_hands": true}},
+        "AGAIN": {"type": "dynamic", "description": "Bent hand arcs into flat palm", "rules": {"hand_shape": "bent", "motion": "arc_to_palm", "two_hands": true}},
+        "WANT": {"type": "dynamic", "description": "Both claw hands pull toward body", "rules": {"hand_shape": "claw", "motion": "pull_in", "two_hands": true}},
+        "NEED": {"type": "dynamic", "description": "X-hand nods downward", "rules": {"hand_shape": "x_hand", "motion": "nod_down"}},
+        "HAVE": {"type": "dynamic", "description": "Bent hands touch chest", "rules": {"hand_shape": "bent", "motion": "touch_chest", "two_hands": true}},
+        "KNOW": {"type": "dynamic", "description": "Flat hand taps forehead", "rules": {"hand_shape": "flat_hand", "motion": "tap_forehead"}},
+        "DON'T KNOW": {"type": "dynamic", "description": "Flat hand taps forehead then moves away", "rules": {"hand_shape": "flat_hand", "motion": "forehead_away"}},
+        "THINK": {"type": "dynamic", "description": "Index finger points to forehead", "rules": {"hand_shape": "pointing", "motion": "point_forehead"}},
+        "UNDERSTAND": {"type": "dynamic", "description": "Index finger flicks up at forehead", "rules": {"hand_shape": "pointing", "motion": "flick_up_forehead"}},
+        "GOOD": {"type": "dynamic", "description": "Flat hand from chin forward and down", "rules": {"hand_shape": "flat_hand", "motion": "chin_forward_down"}},
+        "BAD": {"type": "dynamic", "description": "Flat hand from chin flips down", "rules": {"hand_shape": "flat_hand", "motion": "chin_flip_down"}},
+        "OK": {"type": "static", "description": "OK gesture — thumb and index form circle", "rules": {"thumb_touches": "index_tip", "middle_up": true, "ring_up": true, "pinky_up": true}},
+        "SAME": {"type": "dynamic", "description": "Both index fingers together, move side to side", "rules": {"hand_shape": "pointing", "motion": "together_side", "two_hands": true}},
+        "DIFFERENT": {"type": "dynamic", "description": "Both index fingers together then apart", "rules": {"hand_shape": "pointing", "motion": "apart", "two_hands": true}},
+        "BIG": {"type": "dynamic", "description": "Both flat hands move apart", "rules": {"hand_shape": "flat_hand", "motion": "expand", "two_hands": true}},
+        "SMALL": {"type": "dynamic", "description": "Both flat hands move closer", "rules": {"hand_shape": "flat_hand", "motion": "compress", "two_hands": true}},
+        "WATER": {"type": "dynamic", "description": "W-hand taps chin", "rules": {"hand_shape": "w_hand", "motion": "tap_chin"}},
+        "FOOD": {"type": "dynamic", "description": "Flat O hand taps mouth", "rules": {"hand_shape": "flat_o", "motion": "tap_mouth"}},
+        "HOME": {"type": "dynamic", "description": "Flat O from mouth to cheek", "rules": {"hand_shape": "flat_o", "motion": "mouth_to_cheek"}},
+        "NAME": {"type": "dynamic", "description": "H-hand fingers tap each other", "rules": {"hand_shape": "h_hand", "motion": "cross_tap", "two_hands": true}},
+        "TIME": {"type": "dynamic", "description": "Index finger taps wrist", "rules": {"hand_shape": "pointing", "motion": "tap_wrist"}},
+        "MONEY": {"type": "dynamic", "description": "Flat hand taps other palm", "rules": {"hand_shape": "flat_hand", "motion": "tap_palm", "two_hands": true}},
+        "PHONE": {"type": "static", "description": "Y-hand at ear like holding phone", "rules": {"thumb_out": true, "pinky_up": true, "index_curled": true, "middle_curled": true, "ring_curled": true, "near_face": true}}
+      }
+    },
+    "emergency": {
+      "label": "Emergency",
+      "icon": "🚨",
+      "signs": {
+        "HELP ME": {"type": "dynamic", "description": "Fist on palm, both raise urgently", "rules": {"hand_shape": "fist_on_palm", "motion": "raise_urgent", "two_hands": true}},
+        "CALL POLICE": {"type": "dynamic", "description": "C-hand at ear + badge tap on chest", "rules": {"hand_shape": "c_curve", "motion": "ear_then_chest"}},
+        "NEED DOCTOR": {"type": "dynamic", "description": "Fingertips tap wrist pulse", "rules": {"hand_shape": "flat_hand", "motion": "tap_wrist_pulse", "two_hands": true}},
+        "DANGER": {"type": "dynamic", "description": "Fist rises past other fist urgently", "rules": {"hand_shape": "fist", "motion": "rise_past", "two_hands": true}},
+        "PAIN": {"type": "dynamic", "description": "Both index fingers point and twist at each other", "rules": {"hand_shape": "pointing", "motion": "twist_at_each_other", "two_hands": true}},
+        "EMERGENCY": {"type": "dynamic", "description": "E-hand shakes side to side", "rules": {"hand_shape": "e_hand", "motion": "shake_horizontal"}},
+        "FIRE": {"type": "dynamic", "description": "Both hands wiggle fingers while rising", "rules": {"hand_shape": "wiggle", "motion": "rise_wiggle", "two_hands": true}},
+        "HOSPITAL": {"type": "dynamic", "description": "H-hand draws cross on upper arm", "rules": {"hand_shape": "h_hand", "motion": "draw_cross"}}
+      }
+    }
+  },
+  "total_signs": 136,
+  "static_signs": ["A","B","D","E","I","K","L","M","N","O","R","S","T","U","V","W","X","Y","0","1","2","3","4","5","6","7","8","9","STOP","LOVE","OK","PHONE","F","C","G","H","P","Q"],
+  "dynamic_signs": ["HELLO","HI","BYE","GOOD MORNING","GOOD NIGHT","WELCOME","NICE TO MEET YOU","THANK YOU","PLEASE","SORRY","EXCUSE ME","YOU'RE WELCOME","WHAT","WHY","WHERE","WHEN","HOW","WHO","HOW MUCH","GO","COME","WAIT","EAT","DRINK","HELP","WALK","RUN","WORK","PLAY","LEARN","WRITE","READ","OPEN","CLOSE","GIVE","TAKE","SIT","STAND","HAPPY","SAD","ANGRY","SCARED","EXCITED","TIRED","LIKE","HATE","SURPRISE","YES","NO","MAYBE","MORE","AGAIN","WANT","NEED","HAVE","KNOW","DON'T KNOW","THINK","UNDERSTAND","GOOD","BAD","SAME","DIFFERENT","BIG","SMALL","WATER","FOOD","HOME","NAME","TIME","MONEY","HELP ME","CALL POLICE","NEED DOCTOR","DANGER","PAIN","EMERGENCY","FIRE","HOSPITAL","J","Z"]
+}

@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: sign-language-decoder
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: "2"

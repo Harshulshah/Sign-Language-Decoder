@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+app.log
+
+# Model files (large binary)
+model/sign_language_model.h5
+model/labels.json
+
+# TensorFlow
+*.tflite
+
+# Misc
+*.bak
+*.tmp

@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "description": "User-added custom signs",
+  "signs": {
+    "FUCK YOU": {
+      "description": "raising midal finger",
+      "category": "emergency",
+      "type": "custom",
+      "created": "2026-04-20 14:17:59"
+    }
+  }
+}
